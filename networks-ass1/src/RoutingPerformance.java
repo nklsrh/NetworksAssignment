@@ -1,15 +1,13 @@
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Scanner;
-
-import com.sun.tools.javac.util.List;
 
 
 public class RoutingPerformance {
+	
+	private static Network n;
+	private static int rate;
 
 	/**
 	 * @param args
@@ -28,15 +26,18 @@ public class RoutingPerformance {
 		System.out.println("--------------------------------------------");
 		
 		InputStream topoFile = null;
+		InputStream workFile = null;
 		try {
 			topoFile = new FileInputStream(args[2]);
+			workFile = new FileInputStream(args[3]);
+			rate = Integer.parseInt(args[4]);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Reading topology from: " + Paths.get("") + "/" + topoFile);
+		System.out.println("Reading topology from: " + topoFile);
 	    //use a second Scanner to parse the content of each line 
-		Network n = new Network();
+		n = new Network();
 	    Scanner scanner = new Scanner(topoFile);
 	    Scanner ssc = null;
 	    while (scanner.hasNextLine()){
@@ -48,14 +49,45 @@ public class RoutingPerformance {
 				String r2 = ssc.next();
 				String delay = ssc.next();
 				String capacity = ssc.next();
-				Link link0 = new Link(new Router(r1), new Router(r2), Integer.parseInt(delay), Integer.parseInt(capacity));
-				n.Add(link0);
+				//Separated adding links and routers for code clarity
+				//Routers now contain information on which neighbours they're linked to
+				n.AddRouter(r1);
+				n.AddRouter(r2);
+				n.AddLink(r1, r2, Integer.parseInt(delay), Integer.parseInt(capacity));
+			}
+			catch (Exception e) 
+			{
+			}
+	    }
+	    
+		System.out.println("--------------------------------------------\n");
+		System.out.println("Reading Workload");
+		System.out.println("--------------------------------------------");
+	    //reuse scanners to parse workload file
+	    scanner = new Scanner(workFile);
+	    ssc = null;
+	    while (scanner.hasNextLine()){
+			try {
+				String line = scanner.nextLine();
+			    ssc = new Scanner(line);
+				ssc.useDelimiter(" ");
+				double time = Double.parseDouble(ssc.next());
+				String r1 = ssc.next();
+				String r2 = ssc.next();
+				double duration = Double.parseDouble(ssc.next());
+				int totalpackets = (int) Math.ceil(duration * rate);
+				for (double i = 0; i < totalpackets; i++)
+				{
+					//Add packets using the establishment time of each individual packet
+					n.AddPacket((time + i * 1d/rate), r1, r2);
+				}
 			}
 			catch (Exception e) 
 			{
 			}
 	    }
 	    n.Print();
+	    System.out.println("Test SHP A to D: " + n.GetSHP("A", "D"));
 		System.out.println("--------------------------------------------");
 		System.out.println("GOODBYE!");
 	}
