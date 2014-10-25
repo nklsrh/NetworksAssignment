@@ -37,7 +37,7 @@ public class Packet implements Comparable<Packet> {
 	}
 
 	public String ToString() {
-		return ("Timestamp " + timestamp + "\t" + start + "-" + end);
+		return (start + "-" + end + "\t" + "Timestamp: " + timestamp);
 	}
 
 }
