@@ -89,6 +89,7 @@ public class RoutingPerformance {
 	    n.Print();
 	    System.out.println("Test SHP A to D: " + n.GetSHP("A", "D"));
 	    System.out.println("Test SDP A to D: " + n.GetSDP("A", "D"));
+	    System.out.println("Test LLP A to D: " + n.GetLLP("A", "D"));
 		System.out.println("--------------------------------------------");
 		System.out.println("GOODBYE!");
 	}

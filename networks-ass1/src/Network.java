@@ -192,7 +192,7 @@ public class Network {
 		return path;
 	}
 
-	//Finds the shortest hop path between two routers and returns the path as a list of router names
+	//Finds the least loaded path between two routers and returns the path as a list of router names
 	//********NOT SURE IF 100% CORRECT YET*********
 	public ArrayList<String> GetLLP(String r1, String r2)
 	{
@@ -200,24 +200,24 @@ public class Network {
 		ArrayList<String> visited = new ArrayList<String>();
 		PriorityQueue<QueueRouter> queue = new PriorityQueue<QueueRouter>();
 		visited.add(r1);
-//		System.out.println("SHP from " + r1 + " to " + r2);
+		System.out.println("LLP from " + r1 + " to " + r2);
 		int cost = 1;
 		for (String router : GetRouter(r1).GetNeighbours())
 		{
 			//Adding initial router neighbours into queue
-			queue.add(new QueueRouter(new ArrayList<String>(), router, cost));
-//			System.out.println("add " + router);
+			queue.add(new QueueRouter(new ArrayList<String>(), router, GetLink(router, r1).GetLinkLoad()));
+			System.out.println("add " + router);
 		}
 		
 		while (!queue.isEmpty())
 		{
 			//Visits the topmost router at the queue
 			QueueRouter current = queue.remove();
-//			System.out.println("Remove this from queue " + current.GetPath());
+			System.out.println("Remove this from queue " + current.GetPath());
 			
 			if (current.GetName().equals(r2) )
 			{
-//				System.out.println("Found Goal " + r2 + " cost " + current.GetCost());
+				System.out.println("Found Goal " + r2 + " cost " + current.GetCost());
 				//End router found
 				path = current.GetPath();
 				path.add(0, r1);
@@ -225,16 +225,16 @@ public class Network {
 			}
 			//If not at the end router yet
 			visited.add(current.GetName());
-//			System.out.println("Add to Visited " + current.GetPath() + " cost " + current.GetCost());
+			System.out.println("Add to Visited " + current.GetPath() + " cost " + current.GetCost());
 			cost = current.GetCost();
 			for (String router : GetRouter(current.GetName()).GetNeighbours())
 			{
 				if (!visited.contains(router))
 				{
 					//Adding all unvisited neighbours into queue with cost increment
-					QueueRouter q = new QueueRouter(current.GetPath(), router, cost + 1);
+					QueueRouter q = new QueueRouter(current.GetPath(), router, cost + GetLink(router, current.GetName()).GetLinkLoad());
 					queue.add(q);
-//					System.out.println("Add to Queue " + q.GetPath() + " cost " + q.GetCost());
+					System.out.println("Add to Queue " + q.GetPath() + " cost " + q.GetCost());
 				}
 			}
 		}

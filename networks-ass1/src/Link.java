@@ -15,6 +15,12 @@ public class Link {
 		currentLoad = 0;
 	}
 	
+	public int GetLinkLoad ()
+	{
+		// TODO: Implement Link load
+		return currentLoad;
+	}
+	
 	//Checks to see if the two given routers are indeed the two routers connected by this link
 	public boolean MatchRouters(String m1, String m2)
 	{
