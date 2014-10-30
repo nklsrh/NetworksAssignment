@@ -4,18 +4,13 @@ import java.util.PriorityQueue;
 
 public class Network {
 
-	public enum RoutingProtocol {
-		SHP, SDP, LLP
-	}
 	private ArrayList<Link> links;
 	private ArrayList<Router> routers;
-	private PriorityQueue<Packet> packetQueue;
 	
 	public Network ()
 	{
 		links = new ArrayList<Link>();
 		routers = new ArrayList<Router>();
-		packetQueue = new PriorityQueue<Packet>();
 	}
 	
 	//Adds a link to the network, and adds each end of the link as a neighbour to the other end
@@ -38,7 +33,7 @@ public class Network {
 				}
 			}
 		}
-		Link link = new Link(r1, r2, delay, capacity);
+		Link link = new Link(r1, r2, delay, capacity);	
 		links.add(link);
 	}
 	
@@ -76,24 +71,49 @@ public class Network {
 	//Returns the link between two routers given in any order, or null if no link exists
 	public Link GetLink(String r1, String r2)
 	{
-		for (Router router: routers)
+		for (Link link : links)
 		{
-			if (router.ToString().equals(r1) || router.ToString().equals(r2))
-			{
-				for (String neighbour : router.GetNeighbours())
-				{
-					if (neighbour.equals(r2) || neighbour.equals(r1))
-					{
-						for (Link link : links)
-						{
-							if (link.MatchRouters(r1, r2)) return link;
-						}
-					}
-				}
-			}
+			if (link.MatchRouters(r1, r2)) return link;
 		}
 		return null;
 	}
+	
+	public int GetDelay(ArrayList<String> path)
+	{
+		int delay = 0;
+		for (int i = 0; i < path.size() - 1; i++)
+		{
+			delay += GetLink(path.get(i), path.get(i+1)).propogationDelay;
+		}
+		return delay;
+	}
+	
+	public boolean AddConnToLink(ArrayList<String> path)
+	{
+		for (int i = 0; i < path.size() - 1; i++)
+		{
+			if (GetLink(path.get(i), path.get(i+1)).IsFull())
+			{
+				return false;
+			}
+		}
+		for (int i = 0; i < path.size() - 1; i++)	
+		{
+			GetLink(path.get(i), path.get(i+1)).AddConnection();
+			//System.out.println("Added connection to " + path.get(i) + " and " + path.get(i+1) + " new load is " + link.currentLoad);
+		}
+		return true;
+	}
+	
+	public void RemoveConnFromLink(ArrayList<String> path)
+	{
+		for (int i = 0; i < path.size() - 1; i++)
+		{
+			GetLink(path.get(i), path.get(i+1)).RemoveConnection();
+			//System.out.println("Removed connection from " + path.get(i) + " and " + path.get(i+1) + " new load is " + link.currentLoad);
+		}
+	}
+	
 	//Finds the shortest delay path between two routers [cost != 1, cost = delay(r1, r2)] and returns the path as a list of router names
 	public ArrayList<String> GetSDP(String r1, String r2)
 	{
@@ -102,7 +122,7 @@ public class Network {
 		PriorityQueue<QueueRouter> queue = new PriorityQueue<QueueRouter>();
 		visited.add(r1);
 //		System.out.println("\nSDP from " + r1 + " to " + r2);
-		int cost = 0;
+		double cost = 0;
 		for (String router : GetRouter(r1).GetNeighbours())
 		{
 			//Adding initial router neighbours into queue
@@ -151,7 +171,7 @@ public class Network {
 		PriorityQueue<QueueRouter> queue = new PriorityQueue<QueueRouter>();
 		visited.add(r1);
 //		System.out.println("SHP from " + r1 + " to " + r2);
-		int cost = 1;
+		double cost = 1;
 		for (String router : GetRouter(r1).GetNeighbours())
 		{
 			//Adding initial router neighbours into queue
@@ -200,52 +220,45 @@ public class Network {
 		ArrayList<String> visited = new ArrayList<String>();
 		PriorityQueue<QueueRouter> queue = new PriorityQueue<QueueRouter>();
 		visited.add(r1);
-		System.out.println("LLP from " + r1 + " to " + r2);
-		int cost = 1;
 		for (String router : GetRouter(r1).GetNeighbours())
 		{
 			//Adding initial router neighbours into queue
-			queue.add(new QueueRouter(new ArrayList<String>(), router, GetLink(router, r1).GetLinkLoad()));
-			System.out.println("add " + router);
+			queue.add(new QueueRouter(new ArrayList<String>(), router, (double)GetLink(r1, router).GetLinkLoad() / (double)GetLink(r1, router).capacity));
 		}
 		
 		while (!queue.isEmpty())
 		{
 			//Visits the topmost router at the queue
-			QueueRouter current = queue.remove();
-			System.out.println("Remove this from queue " + current.GetPath());
-			
+			QueueRouter current = queue.remove();	
 			if (current.GetName().equals(r2) )
 			{
-				System.out.println("Found Goal " + r2 + " cost " + current.GetCost());
 				//End router found
 				path = current.GetPath();
 				path.add(0, r1);
+				
+				/*
+				System.out.println("LLP:");
+				for (int i = 0; i < path.size() - 1; i++)
+				{
+					System.out.println(path.get(i) + "-" + path.get(i+1) + " " + GetLink(path.get(i), path.get(i+1)).GetLinkLoad() + "/" + GetLink(path.get(i), path.get(i+1)).capacity);
+				}
+				*/
+				
 				return path;
 			}
 			//If not at the end router yet
 			visited.add(current.GetName());
-			System.out.println("Add to Visited " + current.GetPath() + " cost " + current.GetCost());
-			cost = current.GetCost();
 			for (String router : GetRouter(current.GetName()).GetNeighbours())
 			{
 				if (!visited.contains(router))
 				{
-					//Adding all unvisited neighbours into queue with cost increment
-					QueueRouter q = new QueueRouter(current.GetPath(), router, cost + GetLink(router, current.GetName()).GetLinkLoad());
+					//Adding all unvisited neighbours into queue with load as cost
+					QueueRouter q = new QueueRouter(current.GetPath(), router, (double)GetLink(router, current.GetName()).GetLinkLoad() / (double)GetLink(router, current.GetName()).capacity);
 					queue.add(q);
-					System.out.println("Add to Queue " + q.GetPath() + " cost " + q.GetCost());
 				}
 			}
 		}
 		return path;
-	}
-
-	
-	//Adds packets to the priority queue, sorted by the establishment time of each packet
-	public void AddPacket(double time, String r1, String r2)
-	{
-		packetQueue.add(new Packet(time, r1, r2));
 	}
 	
 	public void Print ()

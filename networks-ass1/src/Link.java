@@ -29,6 +29,21 @@ public class Link {
 		return false;
 	}
 	
+	public boolean IsFull()
+	{
+		return (capacity == currentLoad);
+	}
+	
+	public void AddConnection()
+	{
+		currentLoad++;
+	}
+	
+	public void RemoveConnection()
+	{
+		currentLoad--;
+	}
+	
 	public String ToString()
 	{
 		return (r1 + "-" + r2 + "\t Delay " + propogationDelay + "\t Capacity " + capacity);

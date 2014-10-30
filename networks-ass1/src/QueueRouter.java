@@ -3,10 +3,10 @@ import java.util.ArrayList;
 
 public class QueueRouter implements Comparable<QueueRouter> {
 	private String name;
-	private int cost;
+	private double cost;
 	private ArrayList<String> path;
 	
-	public QueueRouter(ArrayList<String> prevPath, String n, int c)
+	public QueueRouter(ArrayList<String> prevPath, String n, double c)
 	{
 		path = new ArrayList<String>();
 		path.addAll(prevPath);
@@ -20,12 +20,12 @@ public class QueueRouter implements Comparable<QueueRouter> {
 		return name;
 	}
 	
-	public int GetCost()
+	public double GetCost()
 	{
 		return cost;
 	}
 	
-	public int SetCost(int c)
+	public double SetCost(int c)
 	{
 		cost = c;
 		return cost;
@@ -44,6 +44,9 @@ public class QueueRouter implements Comparable<QueueRouter> {
 	@Override
 	public int compareTo(QueueRouter r)
 	{
-		return cost - r.GetCost();
+		if (cost > r.GetCost()) {
+			return 1;
+		}
+		return -1;
 	}
 }

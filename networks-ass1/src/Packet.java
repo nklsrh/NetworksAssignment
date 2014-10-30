@@ -1,9 +1,10 @@
 
 public class Packet implements Comparable<Packet> {
 
-	private double timestamp;
-	private String start;
-	private String end;
+	public double timestamp;
+	public String start;
+	public String end;
+	
 	
 	public Packet(double t, String r1, String r2)
 	{
